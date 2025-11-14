@@ -43,18 +43,7 @@ People with multiple sclerosis (pwMS) frequently use disease-modifying therapies
 ## Objective
 Does current DMT use increase the risk of being diagnosed (suspected/confirmed) with COVID-19 among pwMS?
 
-## Literature Review 
-People with multiple sclerosis (MS) often take medicines called disease-modifying therapies (DMTs). These drugs change how the immune system works to reduce relapses, but this also made doctors worry that they might affect a person’s chances of getting COVID-19 or having a worse infection. Early studies from large MS registries found that most DMTs did not make people more likely to catch COVID-19. However, a few drugs —especially ocrelizumab and rituximab—were linked to more serious illness (Sormani et al., 2021)[1]. Later reviews showed the same pattern, while medicines like interferon-β, glatiramer acetate, and dimethyl fumarate appeared safe (Moghadasi et al., 2023)[2].
 
-Other research found that people on DMTs were about as likely to get infected as those not on treatment once factors like age and other health conditions were considered (Salter et al., 2021 [3]; Garcia-Domínguez et al., 2024) [4] . 
-
-Overall, the evidence suggests that while a few treatments may lead to more severe COVID-19, being on a DMT generally does not increase the risk of infection.
-
-## Rationale for the present study
-
-Current research on multiple sclerosis (MS) and COVID-19 mainly focuses on how severe the infection becomes for people taking disease-modifying therapies (DMTs), such as the risk of hospitalisation or intensive care. Much less is known about whether being on a DMT actually changes the likelihood of catching COVID-19 in the first place. This is an important gap because a therapy could influence infection risk differently from how it affects illness severity.
-
-This study aims to explore that question by using the Global Data Sharing Initiative (GDSI) open dataset, which contains de-identified records of people with MS. The analysis treats COVID-19 diagnosis as a binary outcome that combines both suspected and confirmed infections, capturing real-world conditions when testing was limited and many cases went unconfirmed. It compares people currently on any DMT with those not receiving treatment to assess whether DMT exposure in general affects the odds of infection. By applying transparent, reproducible statistical methods in R and adjusting for age, sex, and comorbidities, the study provides a clear, openly verifiable estimate of COVID-19 infection risk among people with MS—adding to what is known about disease severity to give a fuller picture of DMT safety during the pandemic.
 
 ## Methods
 Cross-sectional analysis of the **Global Data Sharing Initiative (GDSI)** open dataset.  
@@ -64,8 +53,7 @@ Cross-sectional analysis of the **Global Data Sharing Initiative (GDSI)** open d
 - **Model:** logistic regression estimating adjusted odds ratios (AORs).  
 - **Tools:** R (tidyverse, gtsummary, knitr, broom, DT).
 
-### Analytical rationale
-Logistic regression was chosen because the outcome variable—COVID-19 diagnosis—was binary (infected vs not infected), and the goal was to estimate the adjusted odds of infection associated with DMT exposure. Sex, age group, and comorbidity status were included as covariates to account for demographic and clinical factors known to influence infection risk in people with MS. The model assumes independence of observations and a logit-linear relationship between the predictors and the outcome; these assumptions were judged reasonable for this cohort. The analysis focused on effect size (odds ratios with 95% confidence intervals) rather than statistical significance alone. Given the small number of confirmed cases, suspected and confirmed infections were combined into a single binary outcome (infected = 1, not infected = 0). This approach preserved statistical power and better reflected the diagnostic uncertainty that characterized the early phases of the COVID-19 pandemic, when limited testing capacity and evolving case definitions led to substantial under-ascertainment of true infections. Surveillance analyses from this period indicate that confirmed case counts captured only a fraction of symptomatic infections worldwide, with many probable or suspected cases lacking laboratory confirmation despite compatible clinical presentation (Russell et al., 2020) [6]. Combining these categories therefore provides a more realistic representation of infection burden while maintaining analytical robustness given the available data.
+
 
 
 ## Results
@@ -78,7 +66,26 @@ In this cohort, **DMT use was not associated** with higher COVID-19 diagnosis ri
 
 ---
 
-# Global Data Sharing Initiative dataset
+# Introduction
+## Literature Review 
+People with multiple sclerosis (MS) often take medicines called disease-modifying therapies (DMTs). These drugs change how the immune system works to reduce relapses, but this also made doctors worry that they might affect a person’s chances of getting COVID-19 or having a worse infection. Early studies from large MS registries found that most DMTs did not make people more likely to catch COVID-19. However, a few drugs —especially ocrelizumab and rituximab—were linked to more serious illness (Sormani et al., 2021)[1]. Later reviews showed the same pattern, while medicines like interferon-β, glatiramer acetate, and dimethyl fumarate appeared safe (Moghadasi et al., 2023)[2].
+
+Other research found that people on DMTs were about as likely to get infected as those not on treatment once factors like age and other health conditions were considered (Salter et al., 2021 [3]; Garcia-Domínguez et al., 2024) [4] . 
+
+Overall, the evidence suggests that while a few treatments may lead to more severe COVID-19, being on a DMT generally does not increase the risk of infection.
+
+
+## Rationale for the present study
+
+Current research on multiple sclerosis (MS) and COVID-19 mainly focuses on how severe the infection becomes for people taking disease-modifying therapies (DMTs), such as the risk of hospitalisation or intensive care. Much less is known about whether being on a DMT actually changes the likelihood of catching COVID-19 in the first place. This is an important gap because a therapy could influence infection risk differently from how it affects illness severity.
+
+This study aims to explore that question by using the Global Data Sharing Initiative (GDSI) open dataset, which contains de-identified records of people with MS. The analysis treats COVID-19 diagnosis as a binary outcome that combines both suspected and confirmed infections, capturing real-world conditions when testing was limited and many cases went unconfirmed. It compares people currently on any DMT with those not receiving treatment to assess whether DMT exposure in general affects the odds of infection. By applying transparent, reproducible statistical methods in R and adjusting for age, sex, and comorbidities, the study provides a clear, openly verifiable estimate of COVID-19 infection risk among people with MS—adding to what is known about disease severity to give a fuller picture of DMT safety during the pandemic.
+
+### Analytical rationale
+Logistic regression was chosen because the outcome variable—COVID-19 diagnosis—was binary (infected vs not infected), and the goal was to estimate the adjusted odds of infection associated with DMT exposure. Sex, age group, and comorbidity status were included as covariates to account for demographic and clinical factors known to influence infection risk in people with MS. The model assumes independence of observations and a logit-linear relationship between the predictors and the outcome; these assumptions were judged reasonable for this cohort. The analysis focused on effect size (odds ratios with 95% confidence intervals) rather than statistical significance alone. Given the small number of confirmed cases, suspected and confirmed infections were combined into a single binary outcome (infected = 1, not infected = 0). This approach preserved statistical power and better reflected the diagnostic uncertainty that characterized the early phases of the COVID-19 pandemic, when limited testing capacity and evolving case definitions led to substantial under-ascertainment of true infections. Surveillance analyses from this period indicate that confirmed case counts captured only a fraction of symptomatic infections worldwide, with many probable or suspected cases lacking laboratory confirmation despite compatible clinical presentation (Russell et al., 2020) [6]. Combining these categories therefore provides a more realistic representation of infection burden while maintaining analytical robustness given the available data.
+
+
+## Global Data Sharing Initiative dataset
 **Overview.** The cohort was predominantly female and mainly within the 18–50 year age group, consistent with **Walton et al.** [5], which reports that females are approximately twice as likely to live with MS and that the mean age at diagnosis is ~32 years.  
 **Data governance.** This dataset is openly available through the University of Cambridge PACE Department [7] under open-data sharing terms and contains de-identified participant records; no additional ethical approval was required for secondary analysis.
 
