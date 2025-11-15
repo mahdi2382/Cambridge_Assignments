@@ -15,27 +15,12 @@ df_print: paged
 
 ---
 
+![Screenshot](Cover Page.png)
+![Screenshot](CoverPage2.png)
+![Screenshot](CoverPage3.png)
+
 # Abstract
 
-<!-- Quick jump links within the Abstract -->
-**Jump to:** [Background](#background) · [Objective](#objective) · [Methods](#methods) · [Results](#results) · [Conclusion](#conclusion) · [Global Data Sharing Initiative dataset](#global-data-sharing-initiative-dataset) · [Variables used](#variables-used-in-the-analysis)
-
-<details>
-  <summary><strong>Abstract (click to expand)</strong></summary>
-
-People with multiple sclerosis (pwMS) frequently use disease-modifying therapies (DMTs), raising questions about COVID-19 risk. We analysed the Global Data Sharing Initiative (GDSI) open dataset to assess whether current DMT use is associated with suspected/confirmed COVID-19.
-
-**Design.** Cross-sectional analysis.  
-**Outcome.** Suspected or confirmed COVID-19 (binary).  
-**Exposure.** Current DMT use (On vs Not on).  
-**Covariates.** Sex, age group, comorbidities.  
-**Analysis.** Multivariable logistic regression (adjusted odds ratios, AORs).
-
-**Results.** Among 1,141 participants, 79.2% were female (n = 904) and 20.8% male (n = 237). Most were aged 18–50; comorbidities were reported by 28.7%. DMT status: 77.1% on therapy, 8.9% not currently, 14.0% never treated. Overall, 24.8% (≈283) had suspected/confirmed COVID-19; severe outcomes (hospitalisation or ICU) were rare (~1%, n ≈ 15). After adjustment, DMT use was not associated with higher odds of suspected/confirmed COVID-19.
-
-**Conclusion.** In this cohort, DMT use was not linked to higher COVID-19 diagnosis risk. Inference on severity is limited by the small number of severe events.
-
-</details>
 
 ## Background
 People with multiple sclerosis (pwMS) frequently use disease-modifying therapies (DMTs), raising questions about COVID-19 risk.
