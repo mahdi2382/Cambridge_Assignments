@@ -1,0 +1,409 @@
+---
+title: "COVID-19 Symptoms vs Confirmation (MS Cohort)"
+subtitle: "Are pwMS on DMTs more likely to be suspected/confirmed with COVID-19?"
+date: "2025-11-01"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_folding: hide
+    theme: flatly
+    highlight: textmate
+df_print: paged
+---
+
+---
+
+![Screenshot](Cover Page.png)
+![Screenshot](CoverPage2.png)
+![Screenshot](CoverPage3.png)
+
+# Abstract
+
+
+## Background
+People with multiple sclerosis (pwMS) frequently use disease-modifying therapies (DMTs), raising questions about COVID-19 risk.
+
+## Objective
+Does current DMT use increase the risk of being diagnosed (suspected/confirmed) with COVID-19 among pwMS?
+
+
+
+## Methods
+Cross-sectional analysis of the **Global Data Sharing Initiative (GDSI)** open dataset.  
+- **Primary outcome:** suspected/confirmed COVID-19.  
+- **Exposure:** current DMT (On vs Not on).  
+- **Covariates:** sex, age group, comorbidities.  
+- **Model:** logistic regression estimating adjusted odds ratios (AORs).  
+- **Tools:** R (tidyverse, gtsummary, knitr, broom, DT).
+
+
+
+
+## Results
+A total of **1,141** participants were included. Of these, **79.2%** were female (n = 904) and **20.8%** male (n = 237). Most individuals (≈79%) were aged **18–50 years**, with few \<18 or \>70. **Comorbidities** were reported by **28.7%**.  
+**Treatment:** 77.1% currently on a DMT, 8.9% not currently on a DMT, 14.0% never treated.  
+**COVID-19:** 24.8% (≈283) had suspected/confirmed infection. **Severe outcomes**—hospitalisation or ICU—were rare (~1%, n ≈ 15).
+
+## Conclusion
+In this cohort, **DMT use was not associated** with higher COVID-19 diagnosis risk. Conclusions on severity are limited by the small number of severe events.
+
+---
+
+# Introduction
+## Literature Review 
+People with multiple sclerosis (MS) often take medicines called disease-modifying therapies (DMTs). These drugs change how the immune system works to reduce relapses, but this also made doctors worry that they might affect a person’s chances of getting COVID-19 or having a worse infection. Early studies from large MS registries found that most DMTs did not make people more likely to catch COVID-19. However, a few drugs —especially ocrelizumab and rituximab—were linked to more serious illness (Sormani et al., 2021)[1]. Later reviews showed the same pattern, while medicines like interferon-β, glatiramer acetate, and dimethyl fumarate appeared safe (Moghadasi et al., 2023)[2].
+
+Other research found that people on DMTs were about as likely to get infected as those not on treatment once factors like age and other health conditions were considered (Salter et al., 2021 [3]; Garcia-Domínguez et al., 2024) [4] . 
+
+Overall, the evidence suggests that while a few treatments may lead to more severe COVID-19, being on a DMT generally does not increase the risk of infection.
+
+
+## Rationale for the present study
+
+Current research on multiple sclerosis (MS) and COVID-19 mainly focuses on how severe the infection becomes for people taking disease-modifying therapies (DMTs), such as the risk of hospitalisation or intensive care. Much less is known about whether being on a DMT actually changes the likelihood of catching COVID-19 in the first place. This is an important gap because a therapy could influence infection risk differently from how it affects illness severity.
+
+This study aims to explore that question by using the Global Data Sharing Initiative (GDSI) open dataset, which contains de-identified records of people with MS. The analysis treats COVID-19 diagnosis as a binary outcome that combines both suspected and confirmed infections, capturing real-world conditions when testing was limited and many cases went unconfirmed. It compares people currently on any DMT with those not receiving treatment to assess whether DMT exposure in general affects the odds of infection. By applying transparent, reproducible statistical methods in R and adjusting for age, sex, and comorbidities, the study provides a clear, openly verifiable estimate of COVID-19 infection risk among people with MS—adding to what is known about disease severity to give a fuller picture of DMT safety during the pandemic.
+
+### Analytical rationale
+Logistic regression was chosen because the outcome variable—COVID-19 diagnosis—was binary (infected vs not infected), and the goal was to estimate the adjusted odds of infection associated with DMT exposure. Sex, age group, and comorbidity status were included as covariates to account for demographic and clinical factors known to influence infection risk in people with MS. The model assumes independence of observations and a logit-linear relationship between the predictors and the outcome; these assumptions were judged reasonable for this cohort. The analysis focused on effect size (odds ratios with 95% confidence intervals) rather than statistical significance alone. Given the small number of confirmed cases, suspected and confirmed infections were combined into a single binary outcome (infected = 1, not infected = 0). This approach preserved statistical power and better reflected the diagnostic uncertainty that characterized the early phases of the COVID-19 pandemic, when limited testing capacity and evolving case definitions led to substantial under-ascertainment of true infections. Surveillance analyses from this period indicate that confirmed case counts captured only a fraction of symptomatic infections worldwide, with many probable or suspected cases lacking laboratory confirmation despite compatible clinical presentation (Russell et al., 2020) [5]. Combining these categories therefore provides a more realistic representation of infection burden while maintaining analytical robustness given the available data.
+
+
+## Global Data Sharing Initiative dataset
+**Overview.** The cohort was predominantly female and mainly within the 18–50 year age group, consistent with **Walton et al.** [6], which reports that females are approximately twice as likely to live with MS and that the mean age at diagnosis is ~32 years.  
+**Data governance.** This dataset is openly available through the University of Cambridge PACE Department [7] under open-data sharing terms and contains de-identified participant records; no additional ethical approval was required for secondary analysis.
+
+
+---
+
+
+  
+```{r, echo=FALSE}
+  # ---- 0) Packages ----
+# Install if missing (your style)
+if(!require(tidyverse))   install.packages("tidyverse",   repos = "http://cran.us.r-project.org")
+if(!require(gtsummary))   install.packages("gtsummary",   repos = "http://cran.us.r-project.org")
+if(!require(knitr))       install.packages("knitr",       repos = "http://cran.us.r-project.org")
+if(!require(broom))       install.packages("broom",       repos = "http://cran.us.r-project.org")
+if(!require(DT))          install.packages("DT",          repos = "http://cran.us.r-project.org")
+if(!require(kableExtra))  install.packages("kableExtra",  repos = "http://cran.us.r-project.org")
+if(!require(gt))          install.packages("gt",          repos = "http://cran.us.r-project.org")
+
+# Load libraries
+library(tidyverse)   # brings in dplyr, stringr, ggplot2, etc.
+library(gtsummary)
+library(knitr)
+# install.packages("broom")   # only once (kept for reference)
+library(broom)
+library(DT)
+library(kableExtra)
+library(gt)
+
+```
+
+```{r, echo=FALSE}
+# ---- 1) Data ----
+covid_ms <- read.csv(
+  "https://raw.githubusercontent.com/CambridgeICE-HDS/MSt-Healthcare-Data-Science/main/Datasets/COVID-MS/GDSI_OpenDataset_Final.csv",
+  stringsAsFactors = FALSE
+)
+```
+## Data Variables Used in the Analysis
+### Overview of the dataset
+
+The cohort was predominantly female (79%) and mainly within the 18-50 year age group, consistent with the study conducted by Walton et al[1] that mentions Females being twice as likely to live with MS as males and the mean age of diagnosis being 32 years old.
+
+### Variable used
+sex:
+The biological sex of the patient. “Male” (20.77%) for males and “Female” (79.22%) for females. Possible missing values are 0.00%.
+
+current_dmt:
+Indicates the status of the disease-modifying therapy (DMT) at the time of data entry of the patient. There are three unique values in the variable: “yes” (77.12%), “no” (8.85%) and “never_treated” (14.02%). 0.00% possible missing values.
+The values are measured as follows:F
+• yes: if the person is currently on a DMT
+• no: if the person is not currently on a DMT
+• never_treated: if the person has never been on a DMT
+
+has_comorbidities:
+Indicates whether the person has any comorbidities. “Yes” (28.74%) indicates that there are comorbidities, and “No” (71.25%) indicates otherwise. Possible missing values are 0.00%.
+
+age_in_cat:
+Indicates age in categories. Missing values for this field: 0.00%.
+0: if the age range is between 0 and <18.
+1: if the age range is between 18 and ≤50.
+2: if the age range is between 51 and ≤70.
+3: if the age range is 71 or greater.
+
+covid19_diagnosis:
+It shows the perceived COVID-19 diagnosis of the patient. It has three unique values: “not_suspected” (75.19%), “suspected” (19.54%) and “confirmed” (5.25%). 0.00% missing values.
+
+covid19_confirmed_case:
+Confirmed COVID-19 diagnosis of the patient. Has two unique values: “Yes” (5.25%) if the diagnosis is positive and “No” (94.74%) if it's otherwise. 0.00% missing values.
+
+covid19_has_symptoms:
+Indicates the presence or absence of COVID-19 symptoms. Has two unique values: “Yes” (31.77%) if there are one or more symptoms associated with COVID-19, such as fever, dry cough, fatigue, pain, sore throat, shortness of breath, nasal congestion, loss of taste or smell and pneumonia. “No” (68.22%) if there are no symptoms. 0.71% possible missing values.
+
+covid19_outcome_levels_2:
+The outcome of COVID-19. The variable has three unique values: “0” (98.68%), “1” (0.87%), and “2” (0.43%). Possible missing values are 0.00%.
+The unique values were calculated as follows:
+0: If the person has COVID-19 but has not been hospitalised.
+
+
+### Quality checks
+After recoding, integrity checks were performed to confirm valid levels and identify any missing values:
+
+```{r, eval=FALSE}
+table(covid_ms$sex, useNA = "ifany")
+table(covid_ms$dmt_status, useNA = "ifany")
+table(covid_ms$age_group, useNA = "ifany")
+
+
+```{r, echo=FALSE}
+# ---- 2) Clean variables (robust to missing levels) ----
+covid_ms <- covid_ms %>%
+  mutate(
+    # sex (clean + order)
+    sex = case_when(
+      str_to_lower(sex) %in% c("female","f") ~ "female",
+      str_to_lower(sex) %in% c("male","m")   ~ "male",
+      TRUE ~ NA_character_
+    ),
+    sex = factor(sex, levels = c("female","male")),
+    
+    # DMT exposure (2 groups)
+    dmt_status = case_when(
+      current_dmt == "yes" ~ "On DMT",
+      current_dmt %in% c("no", "never_treated") ~ "Not on DMT",
+      TRUE ~ NA_character_
+    ),
+    
+    # comorbidity factor with "no" as reference
+    has_comorbidities = factor(has_comorbidities, levels = c("no","yes")),
+    
+    # age: recode safely THEN set factor order
+    age_group = case_when(
+      age_in_cat == 0 ~ "<18",
+      age_in_cat == 1 ~ "18-50",
+      age_in_cat == 2 ~ "51-70",
+      age_in_cat == 3 ~ "71+",
+      TRUE ~ NA_character_
+    ),
+    age_group = factor(age_group, levels = c("<18","18-50","51-70","71+")),
+    
+    # also keep a labelled version of age_in_cat if you want it elsewhere
+    age_in_cat = factor(age_group, levels = levels(age_group))
+  )
+
+# quick sanity checks
+table(covid_ms$sex, useNA = "ifany")
+table(covid_ms$dmt_status, useNA = "ifany")
+table(covid_ms$age_group, useNA = "ifany")
+```
+
+# Descriptive and inferential findings:
+
+
+A summary of cohort characteristics by sex is shown in Table 1. Most participants were female (79%) and aged 18–50 years. 
+
+To simplify the three-level variable `covid19_diagnosis` (not suspected, suspected, confirmed) for analysis, a binary variable `infected` was created, coded as 1 for suspected/confirmed cases and 0 otherwise. This approach increased statistical power and captured the broader experience of COVID-19 within the cohort.
+
+Overall, 283 participants (24.8%) had a suspected or confirmed infection, while 858 (75.2%) had no infection recorded. Infection rates were similar among those currently on DMT (24.5%) and those not on therapy (25.7%), indicating no meaningful association between DMT status and COVID-19 diagnosis. These findings were consistent with results from the subsequent logistic-regression model.
+
+
+*Table 1. Distribution of cohort characteristics by sex (n = 1,141). The cohort was predominantly female and aged 18–50 years, with most participants currently receiving a disease-modifying therapy (DMT).*
+```{r, echo=FALSE}
+# ---- 3) Table 1 by sex (now 'age_group' exists) ----
+
+tbl_sex <-
+  covid_ms %>%
+  select(sex, age_group, current_dmt, has_comorbidities, covid19_diagnosis) %>%
+  tbl_summary(
+    by = sex,
+    statistic = list(
+      all_continuous() ~ "{mean} ({sd})",
+      all_categorical() ~ "{n} ({p}%)"
+    ),
+    missing = "no"
+  ) %>%
+  add_n() %>%  # adds column Ns
+  bold_labels() %>%
+  modify_caption("**Distribution of Characteristics by Sex**") %>%
+  modify_header(label ~ "**Characteristic**") %>%
+  modify_spanning_header(all_stat_cols() ~ "**Sex**") %>%
+  bold_levels() %>%
+  italicize_levels() %>%
+  as_gt() %>%
+  opt_table_font(
+    font = list(
+      google_font("Open Sans"), 
+      default_fonts()
+    )
+  ) %>%
+  tab_options(
+    table.width = pct(70),
+    table.font.size = 13,
+    heading.align = "center",
+    data_row.padding = px(4),
+    row.striping.background_color = "#f9f9f9"
+  ) %>%
+  opt_row_striping()
+
+tbl_sex
+
+
+# ---- Create binary infection variable ----
+covid_ms <- covid_ms %>%
+  mutate(
+    infected = if_else(
+      covid19_diagnosis %in% c("confirmed", "suspected"),
+      1L, 0L
+    )
+  )
+```
+*Figure 1. Distribution of suspected/confirmed COVID-19 infection in the cohort. Approximately one-quarter of participants were classified as infected (suspected + confirmed).*
+```{r, echo=FALSE}
+# ---- Plot: distribution of infection status ----
+covid_ms %>%
+  count(infected) %>%
+  mutate(
+    infected = factor(infected,
+                      levels = c(0, 1),
+                      labels = c("Not infected", "Infected")),
+    prop = n / sum(n)
+  ) %>%
+  ggplot(aes(x = infected, y = prop, fill = infected)) +
+  geom_col(width = 0.6, show.legend = FALSE) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("#6baed6", "#de2d26")) +
+  labs(
+    title = "Distribution of suspected/confirmed COVID-19 infection",
+    x = "Infection status",
+    y = "Proportion of participants"
+  ) +
+  theme_minimal(base_size = 12)
+```
+
+
+## Logistic Regression and Chi-Square Analysis
+We modelled suspected/confirmed COVID-19 (binary) with logistic regression, adjusting for sex, age group, and comorbidities. DMT use was not associated with infection (aOR = 0.94, 95% CI 0.68–1.30, p = 0.68), whereas male sex had lower odds (aOR = 0.54, 95% CI 0.37–0.78, p < 0.01). Age and comorbidities were not significant. Figures 1–2 show similar infection proportions across DMT groups and by sex. A chi-square test likewise found no unadjusted association between DMT status and infection (χ² = 0.08, p = 0.77).
+
+
+*Figure 2. Proportion of infected versus non-infected participants by current DMT status. Infection prevalence was similar in those on and off DMT (≈25 %), indicating no apparent association.*
+```{r, echo=FALSE}
+infection_summary <- covid_ms %>%
+  group_by(dmt_status) %>%
+  summarise(
+    N = n(),
+    Infected = sum(infected, na.rm = TRUE),
+    Percent = round(mean(infected, na.rm = TRUE) * 100, 1)
+  )
+
+kable(infection_summary, caption = "COVID-19 diagnosis by DMT status")
+
+
+ggplot(covid_ms, aes(x = dmt_status, fill = factor(infected))) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("#6baed6","#de2d26"),
+                    labels = c("Not infected","Infected"),
+                    name = "COVID-19 diagnosis") +
+  labs(title = "Proportion of infected vs. non-infected by DMT status",
+       x = "DMT status", y = "Proportion of participants") +
+  theme_minimal(base_size = 12)
+
+
+model_infection <- glm(
+  infected ~ dmt_status + sex + age_group + has_comorbidities,
+  data = covid_ms,
+  family = binomial
+)
+```
+
+*Figure 3. Proportion of suspected/confirmed infection by sex. Male participants showed a slightly lower proportion of infection than females, consistent with regression results.*
+```{r, echo=FALSE}
+model_infection <- glm(
+  infected ~ dmt_status + sex + age_group + has_comorbidities,
+  data = covid_ms,
+  family = binomial
+)
+
+covid_ms %>%
+  count(sex, infected) %>%
+  group_by(sex) %>%
+  mutate(p = n/sum(n),
+         infected = factor(infected, labels=c("Not infected","Infected"))) %>%
+  ggplot(aes(sex, p, fill = infected)) +
+  geom_col(position="fill") +
+  scale_y_continuous(labels=scales::percent) +
+  labs(title="COVID-19 suspected/confirmed by sex",
+       x="Sex", y="Proportion", fill="COVID-19 status") +
+  theme_minimal(base_size=12)
+
+#mutate(across(where(is.numeric), ~round(., 2)))
+```
+
+*Table 2. Logistic regression results showing the association between DMT status and COVID-19 infection. 
+DMT use was not significantly associated with infection (aOR = 0.94, 95 % CI 0.68–1.30), whereas male sex was associated with lower odds of infection (aOR = 0.54, 95 % CI 0.37–0.78).*
+```{r, echo=FALSE}
+
+results_infection <- tidy(model_infection, exponentiate = TRUE, conf.int = TRUE) %>%
+  mutate(across(where(is.numeric), ~ round(., 2)))
+
+kable(results_infection,
+      caption = "Logistic regression: factors associated with COVID-19 diagnosis")
+
+```
+
+*Table 3. Chi-square test of independence showing no significant unadjusted association between DMT status and infection (χ² = 0.08, p = 0.77).*
+```{r, echo=FALSE}
+chisq_test_result <- chisq.test(table(covid_ms$dmt_status, covid_ms$infected))
+
+chisq_test_result
+```
+
+## Covid severity
+
+Building on the infection analysis, the study also briefly examined COVID-19 severity among participants. A binary variable was created to distinguish between mild cases and those involving hospitalisation or intensive care admission. Results showed that severe cases were extremely uncommon, with only 15 participants (1.3%) meeting the criteria for severe disease, compared with 1,126 (98.7%) who experienced mild or no symptoms. Given this very small number of severe outcomes, no further modelling was performed, as the data were insufficient for reliable statistical analysis. Nevertheless, this observation suggests that, within this cohort, severe COVID-19 was rare, aligning with wider evidence that most people with multiple sclerosis experience only mild illness regardless of DMT status.
+
+```{r, echo=FALSE}
+
+covid_ms <- covid_ms %>%
+  mutate(severe = ifelse(covid19_outcome_levels_2 >= 1, 1, 0))
+
+table(covid_ms$severe)
+```
+
+
+
+# Discussion
+
+In this GDSI cohort, current DMT use was not associated with higher odds of suspected or confirmed COVID-19, and severe outcomes were rare. The study’s strengths include the use of an openly available multi-site dataset that enhances replicability.
+
+However, an important limitation is the **relatively small dataset size**, which restricts statistical power to detect subtle associations or effects within specific DMT subgroups. The limited number of severe COVID-19 cases also precluded detailed modelling of disease severity, meaning that any small differences between therapies could not be explored reliably. The analysis also combined suspected and confirmed infections to maintain power, which may have introduced minor outcome misclassification.
+
+From a biological standpoint, it would be reasonable to expect that some DMTs could **increase susceptibility to infection**, including COVID-19, because several act by suppressing or modulating immune pathways—reducing lymphocyte counts, inhibiting B-cell activation, or altering cytokine signalling. Reports in the literature have indeed shown higher infection risk and worse COVID-19 outcomes for certain DMT classes, particularly **anti-CD20 therapies** such as ocrelizumab and rituximab, which are known to blunt humoral immunity. Nevertheless, the absence of an overall association in this analysis suggests that, across the cohort as a whole, current DMT use did not meaningfully elevate the likelihood of COVID-19 diagnosis.
+
+Future work should include larger datasets with class-specific DMT detail, repeat analyses restricted to laboratory-confirmed infections as a sensitivity check, and incorporate immune-function markers or vaccination status to better evaluate whether specific immunosuppressive mechanisms translate into higher COVID-19 risk.
+
+
+# Conclusion
+
+In conclusion, this analysis found no evidence that disease-modifying therapy (DMT) use was associated with COVID-19 infection or severity among people with multiple sclerosis. These findings are consistent with those reported by Garcia-Dominguez et al. (2023) [4], who analysed the same Global Data Sharing Initiative dataset and likewise observed that DMT exposure did not significantly influence COVID-19 symptom presence or disease severity. The close agreement between the two analyses reinforces the reliability of these results and supports the broader conclusion that DMT treatment does not appear to increase the risk or worsen the clinical course of COVID-19 in this population.
+
+# References
+[1] - Sormani, M. P., De Rossi, N., Schiavetti, I., Carmisciano, L., Cordioli, C., Moiola, L., Radaelli, M., Immovilli, P., Capobianco, M., Trojano, M., Zaratin, P., Tedeschi, G., Comi, G., Battaglia, M. A., Patti, F., Salvetti, M., & Musc-19 Study Group (2021). Disease-Modifying Therapies and Coronavirus Disease 2019 Severity in Multiple Sclerosis. Annals of neurology, 89(4), 780–789. https://doi.org/10.1002/ana.26028
+
+[2] - Moghadasi, A. N., Mirmosayyeb, O., Barzegar, M., Sahraian, M. A., & Ghajarzadeh, M. (2021). The prevalence of COVID-19 infection in patients with multiple sclerosis (MS): a systematic review and meta-analysis. Neurological sciences : official journal of the Italian Neurological Society and of the Italian Society of Clinical Neurophysiology, 42(8), 3093–3099. https://doi.org/10.1007/s10072-021-05373-1
+
+[3] - Salter, A., Fox, R. J., Newsome, S. D., Halper, J., Li, D. K. B., Kanellis, P., Costello, K., Bebo, B., Rammohan, K., Cutter, G. R., & Cross, A. H. (2021). Outcomes and Risk Factors Associated With SARS-CoV-2 Infection in a North American Registry of Patients With Multiple Sclerosis. JAMA neurology, 78(6), 699–708. https://doi.org/10.1001/jamaneurol.2021.0688
+
+[4] - Garcia-Dominguez, M. A., Kipkorir, V., & Srichawla, B. S. (2024). Prognostic indicators for hospitalization and ICU admission in people with multiple sclerosis and COVID-19: an analysis of the COVID-19 in MS global data sharing initiative dataset. Annals of medicine and surgery (2012), 86(2), 720–725. https://doi.org/10.1097/MS9.0000000000001676
+
+[5] Russell TW, Golding N, Hellewell J, Abbott S, Wright L, Pearson CAB, van Zandvoort K, Jarvis CI, Gibbs H, Liu Y, Eggo RM, Edmunds WJ, Kucharski AJ; CMMID COVID-19 working group. Reconstructing the early global dynamics of under-ascertained COVID-19 cases and infections. BMC Med. 2020 Oct 22;18(1):332. doi: 10.1186/s12916-020-01790-9. PMID: 33087179; PMCID: PMC7577796.
+
+[6] - Walton C, King R, Rechtman L, Kaye W, Leray E, Marrie RA, Robertson N, La Rocca N, Uitdehaag B, van der Mei I, Wallin M, Helme A, Angood Napier C, Rijke N, Baneke P. Rising prevalence of multiple sclerosis worldwide: Insights from the Atlas of MS, third edition. Mult Scler. 2020 Dec;26(14):1816-1821. doi: 10.1177/1352458520970841. Epub 2020 Nov 11. PMID: 33174475; PMCID: PMC7720355.
+
+[7] University of Cambridge, PACE Department. (2024). Global Data Sharing Initiative (GDSI) – COVID-MS Open Dataset [Data set]. GitHub. Retrieved from https://github.com/CambridgeICE-HDS/MSt-Healthcare-Data-Science/tree/main/Datasets/COVID-MS/GDSI_OpenDataset_Final.csv
+
+
