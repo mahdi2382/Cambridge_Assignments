@@ -15,9 +15,7 @@ df_print: paged
 
 ---
 
-![Screenshot](Cover Page.png)
-![Screenshot](CoverPage2.png)
-![Screenshot](CoverPage3.png)
+
 
 # Abstract
 
